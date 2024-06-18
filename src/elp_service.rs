@@ -3,6 +3,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use std::collections::HashMap;
 
+use std::process::Output;
 use std::sync::Mutex;
 
 #[derive(Clone, Debug)]
@@ -14,6 +15,7 @@ pub struct ConfigElp {
     pub pause: u32,
     pub comma: bool,
     pub sayagain: bool,
+    pub voice: String,
 }
 
 impl ConfigElp {
@@ -25,6 +27,7 @@ impl ConfigElp {
         pause: u32,
         comma: bool,
         sayagain: bool,
+        voice: String,
     ) -> ConfigElp {
         ConfigElp {
             call_sign,
@@ -34,6 +37,7 @@ impl ConfigElp {
             pause,
             comma,
             sayagain,
+            voice,
         }
     }
     pub fn parse_bool(x: u32) -> bool {
@@ -51,6 +55,7 @@ pub static CONFIG: Lazy<Mutex<ConfigElp>> = Lazy::new(|| {
             5,
             false,
             false,
+            "ATC0".to_string(),
         );
     Mutex::new(m)
 });
@@ -60,7 +65,7 @@ pub fn clone_config() -> ConfigElp {
     config.clone()
 }
 
-const VOICE: &str = "ATC0"; // Default voice
+// const VOICE: &str = "ATC0"; // Default voice
 
 const VOICES: [(&str, &str); 10] = [
     ("Pilot", "Daniel"),
@@ -485,25 +490,19 @@ pub fn be_ready(mut val: usize) {
 }
 
 pub fn say(text: String, flag: bool, comma_pause: bool) -> bool {
-    use std::process::Command;
-    use std::str;
     use std::thread;
     use std::time::Duration;
 
-    let voices_map: HashMap<&str, &str> = VOICES.iter().cloned().collect();
-
     let config = clone_config();
 
-    let mut voice = VOICE.to_string();
-
     // check voice, if defined then set voice and exit
-    for (key, val) in &voices_map {
-        if text.contains(key) {
-            voice.push_str(key);
-            println!("{} ({}:)", voice, val);
-            return false;
-        }
-    }
+    // for (key, val) in &voices_map {
+    //     if text.contains(key) {
+    //         voice.push_str(key);
+    //         println!("{} ({}:)", voice, val);
+    //         return false;
+    //     }
+    // }
     // delay if "Pause" found
     if text.contains("!Pause") {
         thread::sleep(Duration::from_secs(config.pause as u64));
@@ -516,15 +515,7 @@ pub fn say(text: String, flag: bool, comma_pause: bool) -> bool {
             if flag {
                 println!("{tmp_say}");
             }
-            Command::new("say")
-                .arg(format!(
-                    "--voice={}",
-                    voices_map.get(voice.as_str()).unwrap()
-                ))
-                .arg(format!("--rate={}", config.rate))
-                .arg(format!("\"{}\"", tmp_say))
-                .output()
-                .expect("failed to execute process");
+            say_service(tmp_say.to_string(), &config).unwrap();
             thread::sleep(Duration::from_micros(500));
         }
     } else {
@@ -532,23 +523,59 @@ pub fn say(text: String, flag: bool, comma_pause: bool) -> bool {
         if flag {
             println!("{}", text);
         }
-        Command::new("say")
-            .arg(format!(
-                "--voice={}",
-                voices_map.get(voice.as_str()).unwrap()
-            ))
-            .arg(format!("--rate={}", config.rate))
-            .arg(format!("\"{}\"", text))
-            .output()
-            .expect("failed to execute process");
+        say_service(text.to_string(), &config).unwrap();
     }
 
     drop(config);
     true
 }
 
+fn say_service(text: String, config: &ConfigElp) -> Result<Output, std::io::Error> {
+    use std::process::{Command, Output};
+    use std::io::Error;
+
+    if cfg!(windows) {
+        println!("Unsupported platform - windows");
+        Ok(Output {
+            status: Default::default(),
+            stdout: vec![],
+            stderr: vec![],
+        })
+    } else if cfg!(target_os = "linux") {
+        println!("Unsupported platform - unix alike");
+        Ok(Output {
+            status: Default::default(),
+            stdout: vec![],
+            stderr: vec![],
+        })
+    } else if cfg!(target_os = "macos") {
+        let voices_map: HashMap<&str, &str> = get_voices();
+
+        Command::new("say")
+            .arg(format!(
+                "--voice={}",
+                voices_map.get(config.voice.as_str()).unwrap()
+            ))
+            .arg(format!("--rate={}", config.rate))
+            .arg(format!("{}", text))
+            .output()
+    } else {
+        Err(Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Unsupported platform {}",
+                std::env::consts::OS,
+            ),
+        ))
+    }
+}
+
 pub fn get_alfabet() -> HashMap<&'static str, &'static str> {
     ALFABET.iter().cloned().collect()
+}
+
+pub fn get_voices() -> HashMap<&'static str, &'static str> {
+    VOICES.iter().cloned().collect()
 }
 
 #[cfg(test)]
