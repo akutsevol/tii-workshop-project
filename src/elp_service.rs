@@ -19,6 +19,7 @@ pub struct ConfigElp {
 }
 
 impl ConfigElp {
+    #[allow(clippy::too_many_arguments)]
     pub const fn new(
         call_sign: String,
         msg_type: String,
@@ -557,7 +558,7 @@ fn say_service(text: String, config: &ConfigElp) -> Result<Output, std::io::Erro
                 voices_map.get(config.voice.as_str()).unwrap()
             ))
             .arg(format!("--rate={}", config.rate))
-            .arg(format!("{}", text))
+            .arg(text)
             .output()
     } else {
         Err(Error::new(
