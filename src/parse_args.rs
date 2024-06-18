@@ -1,6 +1,6 @@
 pub fn parse_args() {
+    use crate::elp_service::{get_voices, ConfigElp};
     use clap::{Arg, Command};
-    use crate::elp_service::{ConfigElp, get_voices};
 
     let valid_messages = vec!["ANY", "ATIS"]; // Define valid messages as needed
     let mut valid_voices: Vec<&str> = get_voices().keys().cloned().collect();
@@ -13,7 +13,7 @@ pub fn parse_args() {
                 .short('a')
                 .long("callsign")
                 .default_value("A6KIA")
-                .help("Call sign")
+                .help("Call sign"),
         )
         .arg(
             Arg::new("type")
@@ -74,7 +74,8 @@ pub fn parse_args() {
     config.num_msg = matches.get_one::<String>("count").unwrap().parse().unwrap();
     config.rate = matches.get_one::<String>("rate").unwrap().parse().unwrap();
     config.pause = matches.get_one::<String>("pause").unwrap().parse().unwrap();
-    config.comma = ConfigElp::parse_bool(matches.get_one::<String>("comma").unwrap().parse().unwrap());
+    config.comma =
+        ConfigElp::parse_bool(matches.get_one::<String>("comma").unwrap().parse().unwrap());
     config.sayagain = ConfigElp::parse_bool(
         matches
             .get_one::<String>("sayagain")

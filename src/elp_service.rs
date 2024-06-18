@@ -47,17 +47,16 @@ impl ConfigElp {
 }
 
 pub static CONFIG: Lazy<Mutex<ConfigElp>> = Lazy::new(|| {
-    let m = 
-        ConfigElp::new(
-            "A6KIB".to_string(),
-            "ANY".to_string(),
-            0,
-            180,
-            5,
-            false,
-            false,
-            "ATC0".to_string(),
-        );
+    let m = ConfigElp::new(
+        "A6KIB".to_string(),
+        "ANY".to_string(),
+        0,
+        180,
+        5,
+        false,
+        false,
+        "ATC0".to_string(),
+    );
     Mutex::new(m)
 });
 
@@ -532,8 +531,8 @@ pub fn say(text: String, flag: bool, comma_pause: bool) -> bool {
 }
 
 fn say_service(text: String, config: &ConfigElp) -> Result<Output, std::io::Error> {
-    use std::process::{Command, Output};
     use std::io::Error;
+    use std::process::{Command, Output};
 
     if cfg!(windows) {
         println!("Unsupported platform - windows");
@@ -563,10 +562,7 @@ fn say_service(text: String, config: &ConfigElp) -> Result<Output, std::io::Erro
     } else {
         Err(Error::new(
             std::io::ErrorKind::Other,
-            format!(
-                "Unsupported platform {}",
-                std::env::consts::OS,
-            ),
+            format!("Unsupported platform {}", std::env::consts::OS,),
         ))
     }
 }
