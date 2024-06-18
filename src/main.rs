@@ -9,6 +9,13 @@ fn parse_args() {
     let matches = Command::new("elp")
         .about("ELP training tool for pilots")
         .arg(
+            Arg::new("callsign")
+                .short('a')
+                .long("callsign")
+                .default_value("A6KIA")
+                .help("Call sign")
+        )
+        .arg(
             Arg::new("type")
                 .short('t')
                 .long("type")
@@ -53,30 +60,20 @@ fn parse_args() {
         )
         .get_matches();
 
-    let my_config = ConfigElp::new(
-        matches.get_one::<String>("type").unwrap().to_string(),
-        matches.get_one::<String>("count").unwrap().parse().unwrap(),
-        matches.get_one::<String>("rate").unwrap().parse().unwrap(),
-        matches.get_one::<String>("pause").unwrap().parse().unwrap(),
-        ConfigElp::parse_bool(matches.get_one::<String>("comma").unwrap().parse().unwrap()),
-        ConfigElp::parse_bool(
-            matches
-                .get_one::<String>("sayagain")
-                .unwrap()
-                .parse()
-                .unwrap(),
-        ),
-    );
-
-    // println!("{:?}", my_config);
-
     let mut config = crate::elp_service::CONFIG.lock().unwrap();
-    config.msg_type = my_config.msg_type;
-    config.num_msg = my_config.num_msg;
-    config.rate = my_config.rate;
-    config.pause = my_config.pause;
-    config.comma = my_config.comma;
-    config.sayagain = my_config.sayagain;
+    config.call_sign = matches.get_one::<String>("callsign").unwrap().to_string();
+    config.msg_type = matches.get_one::<String>("type").unwrap().to_string();
+    config.num_msg = matches.get_one::<String>("count").unwrap().parse().unwrap();
+    config.rate = matches.get_one::<String>("rate").unwrap().parse().unwrap();
+    config.pause = matches.get_one::<String>("pause").unwrap().parse().unwrap();
+    config.comma = ConfigElp::parse_bool(matches.get_one::<String>("comma").unwrap().parse().unwrap());
+    config.sayagain = ConfigElp::parse_bool(
+        matches
+            .get_one::<String>("sayagain")
+            .unwrap()
+            .parse()
+            .unwrap(),
+    );
 
     drop(config);
 }

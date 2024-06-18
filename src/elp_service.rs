@@ -5,10 +5,9 @@ use std::collections::HashMap;
 
 use std::sync::Mutex;
 
-const CALL_SIGN: &str = "A6KIB";
-
 #[derive(Clone, Debug)]
 pub struct ConfigElp {
+    pub call_sign: String,
     pub msg_type: String,
     pub num_msg: u32,
     pub rate: u32,
@@ -19,6 +18,7 @@ pub struct ConfigElp {
 
 impl ConfigElp {
     pub const fn new(
+        call_sign: String,
         msg_type: String,
         num_msg: u32,
         rate: u32,
@@ -27,6 +27,7 @@ impl ConfigElp {
         sayagain: bool,
     ) -> ConfigElp {
         ConfigElp {
+            call_sign,
             msg_type,
             num_msg,
             rate,
@@ -41,7 +42,16 @@ impl ConfigElp {
 }
 
 pub static CONFIG: Lazy<Mutex<ConfigElp>> = Lazy::new(|| {
-    let m = ConfigElp::new("ANY".to_string(), 0, 180, 5, false, false);
+    let m = 
+        ConfigElp::new(
+            "A6KIB".to_string(),
+            "ANY".to_string(),
+            0,
+            180,
+            5,
+            false,
+            false,
+        );
     Mutex::new(m)
 });
 
@@ -396,8 +406,10 @@ pub fn get_atis_message() -> String {
 pub fn get_any_message() -> String {
     let mut messages_map = MESSAGES.to_vec();
 
+    let config = clone_config();
+
     let mut tmp_msg = "".to_string();
-    tmp_msg.push_str(format!("{}, ", CALL_SIGN).as_str());
+    tmp_msg.push_str(format!("{}, ", config.call_sign).as_str());
     // shuffle messages
     messages_map.shuffle(&mut rand::thread_rng());
 
