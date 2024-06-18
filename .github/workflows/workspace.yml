@@ -2,9 +2,9 @@ name: Workspace
 
 on:
   push:
-    branches: [ "master", "feature/*" ]
+    branches: [ "master", "main", "feature/*" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "main" ]
 
 env:
   CARGO_INCREMENTAL: 0
