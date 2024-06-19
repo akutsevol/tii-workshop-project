@@ -590,6 +590,30 @@ pub fn get_voices() -> Result<HashMap<&'static str, &'static str>, String> {
     }
 }
 
+pub fn prepare_message_for_say(msg: &str) -> String {
+    let alfabet_map = get_alfabet();
+
+    let mut skip = false;
+    let mut tmp = "".to_string();
+
+    for symbol in msg.chars() {
+        if symbol == '!' {
+            skip = true;
+        } else if symbol == ' ' || symbol == ',' {
+            tmp = tmp.trim().to_string();
+            tmp.push(symbol);
+            skip = false;
+        } else if alfabet_map.contains_key(symbol.to_string().as_str()) && !skip {
+            tmp.push_str(alfabet_map[symbol.to_string().as_str()]);
+            tmp.push(' ');
+        } else {
+            tmp.push(symbol);
+        }
+    }
+
+    tmp
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
