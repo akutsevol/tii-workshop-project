@@ -6,17 +6,16 @@ fn main() {
 
     parse_args::parse_args();
 
-    let alfabet_map = elp_service::get_alfabet();
-
-    elp_service::be_ready(1);
-
     let config = clone_config();
-
     println!("{:?}", config);
+
+    let alfabet_map = elp_service::get_alfabet();
 
     let mut num_msg = config.num_msg;
 
     while num_msg > 0 {
+        elp_service::be_ready(config.pause);
+
         let msg = get_message(config.msg_type.as_str());
 
         let mut skip = false;
@@ -37,9 +36,9 @@ fn main() {
             }
         }
 
-        println!("Message: {}", msg.replace('!', ""));
-        say("Pilot".to_string(), false, config.comma);
-        say(tmp.replace("  ", " "), false, config.comma);
+        // say("Pilot".to_string(), false, config.comma).unwrap();
+        println!("{}", msg.replace('!', ""));
+        say(tmp.replace("  ", " "), false, config.comma).unwrap();
 
         num_msg -= 1;
     }

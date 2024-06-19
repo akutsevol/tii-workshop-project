@@ -330,7 +330,8 @@ pub fn get_random_msg() -> String {
                 found.push_str(_symbol.to_string().as_str());
             }
             any_tmp =
-                format!("{}{} ", any_tmp, alfabet_map[_symbol.to_string().as_str()]).to_string();
+                // format!("{}{} ", any_tmp, alfabet_map[_symbol.to_string().as_str()]).to_string();
+                format!("{}{} ", any_tmp, _symbol.to_string());
         } else if _symbol == '=' {
             any_tmp = format!("{}{}", any_tmp, get_rw()).to_string();
         } else {
@@ -472,7 +473,7 @@ pub fn get_message(type_of_msg: &str) -> String {
     }
 }
 
-pub fn be_ready(mut val: usize) {
+pub fn be_ready(mut val: u32) {
     use std::io::{self, Write};
     use std::thread;
     use std::time::Duration;
@@ -490,19 +491,24 @@ pub fn be_ready(mut val: usize) {
     io::stdout().flush().unwrap(); // Ensure the buffer is flushed
 }
 
-pub fn say(text: String, flag: bool, comma_pause: bool) -> bool {
+pub fn say(text: String, flag: bool, comma_pause: bool) -> Result<bool, String> {
     use std::thread;
     use std::time::Duration;
 
     // check voice, if defined then set voice and exit
-    for (key, val) in &get_voices().unwrap() {
-        if text.contains(key) {
-            let mut config_lock = crate::elp_service::CONFIG.lock().unwrap();
-            config_lock.voice = key.to_string();
-            println!("{} ({})", config_lock.voice, val);
-            drop(config_lock);
-            return false;
+    match get_voices() {
+        Ok(platform_voices) => {
+            for (key, val) in &platform_voices {
+                if text.contains(key) {
+                    let mut config_lock = crate::elp_service::CONFIG.lock().unwrap();
+                    config_lock.voice = key.to_string();
+                    println!("{} ({})", config_lock.voice, val);
+                    drop(config_lock);
+                    return Ok(false);
+                }
+            }
         }
+        Err(error) => return Err(error),
     }
 
     let config = clone_config();
@@ -510,7 +516,7 @@ pub fn say(text: String, flag: bool, comma_pause: bool) -> bool {
     // delay if "Pause" found
     if text.contains("!Pause") {
         thread::sleep(Duration::from_secs(config.pause as u64));
-        return false;
+        return Ok(false);
     }
 
     if comma_pause {
@@ -531,7 +537,7 @@ pub fn say(text: String, flag: bool, comma_pause: bool) -> bool {
     }
 
     drop(config);
-    true
+    Ok(true)
 }
 
 fn say_service(text: String, config: &ConfigElp) -> Result<Output, std::io::Error> {
@@ -642,7 +648,7 @@ mod tests {
     fn test_get_squawk() {
         use crate::elp_service::get_squawk;
 
-        let forbidden = [7500, 7600, 7700];
+        let forbidden = [2000, 7000, 7500, 7600, 7700];
 
         let x = get_squawk();
         let y = x.replace("squawk", "").trim().to_string();
