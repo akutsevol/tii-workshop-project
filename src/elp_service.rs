@@ -2,7 +2,6 @@ use once_cell::sync::Lazy;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use std::collections::HashMap;
-
 use std::process::Output;
 use std::sync::Mutex;
 
@@ -65,9 +64,7 @@ pub fn clone_config() -> ConfigElp {
     config.clone()
 }
 
-// const VOICE: &str = "ATC0"; // Default voice
-
-const VOICES: [(&str, &str); 10] = [
+const MAC_VOICES: [(&str, &str); 10] = [
     ("Pilot", "Daniel"),
     ("ATC0", "Kate"),
     ("ATC1", "Tessa"),
@@ -136,8 +133,6 @@ const MESSAGES: [(&str, u32); 9] = [
 
 const LR: [&str; 2] = ["left", "right"];
 
-// pub const VALID_MESSAGES: [&str; 2] = ["ANY", "ATIS"];
-
 pub fn get_frequency() -> String {
     let fq_msg = [
         "departure",
@@ -191,7 +186,13 @@ pub fn get_wind() -> String {
 }
 
 pub fn get_squawk() -> String {
-    let forbidden = [7500, 7600, 7700];
+    const VFR_1: u32 = 2000;
+    const VFR_2: u32 = 7000;
+    const HIJACK: u32 = 7500;
+    const RADIO_FAIL: u32 = 7600;
+    const EMERGENCY: u32 = 7700;
+
+    let forbidden = [VFR_1, VFR_2, HIJACK, RADIO_FAIL, EMERGENCY];
     let mut squawk_tmp;
     let mut rng = rand::thread_rng();
 
@@ -493,16 +494,19 @@ pub fn say(text: String, flag: bool, comma_pause: bool) -> bool {
     use std::thread;
     use std::time::Duration;
 
+    // check voice, if defined then set voice and exit
+    for (key, val) in &get_voices().unwrap() {
+        if text.contains(key) {
+            let mut config_lock = crate::elp_service::CONFIG.lock().unwrap();
+            config_lock.voice = key.to_string();
+            println!("{} ({})", config_lock.voice, val);
+            drop(config_lock);
+            return false;
+        }
+    }
+
     let config = clone_config();
 
-    // check voice, if defined then set voice and exit
-    // for (key, val) in &voices_map {
-    //     if text.contains(key) {
-    //         voice.push_str(key);
-    //         println!("{} ({}:)", voice, val);
-    //         return false;
-    //     }
-    // }
     // delay if "Pause" found
     if text.contains("!Pause") {
         thread::sleep(Duration::from_secs(config.pause as u64));
@@ -549,7 +553,7 @@ fn say_service(text: String, config: &ConfigElp) -> Result<Output, std::io::Erro
             stderr: vec![],
         })
     } else if cfg!(target_os = "macos") {
-        let voices_map: HashMap<&str, &str> = get_voices();
+        let voices_map: HashMap<&str, &str> = get_voices().unwrap();
 
         Command::new("say")
             .arg(format!(
@@ -571,8 +575,12 @@ pub fn get_alfabet() -> HashMap<&'static str, &'static str> {
     ALFABET.iter().cloned().collect()
 }
 
-pub fn get_voices() -> HashMap<&'static str, &'static str> {
-    VOICES.iter().cloned().collect()
+pub fn get_voices() -> Result<HashMap<&'static str, &'static str>, String> {
+    if cfg!(target_os = "macos") {
+        Ok(MAC_VOICES.iter().cloned().collect())
+    } else {
+        Err(String::from("Unsupported platform"))
+    }
 }
 
 #[cfg(test)]

@@ -3,7 +3,7 @@ pub fn parse_args() {
     use clap::{Arg, Command};
 
     let valid_messages = vec!["ANY", "ATIS"]; // Define valid messages as needed
-    let mut valid_voices: Vec<&str> = get_voices().keys().cloned().collect();
+    let mut valid_voices: Vec<&str> = get_voices().unwrap().keys().cloned().collect();
     valid_voices.sort();
 
     let matches = Command::new("elp")

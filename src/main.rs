@@ -9,9 +9,6 @@ fn main() {
     let alfabet_map = elp_service::get_alfabet();
 
     elp_service::be_ready(1);
-    // println!("{}", get_message("BLA"));
-    // println!("{}", get_message(VALID_MESSAGES[check_valid_msg("ANY") as usize]));
-    // println!("{}", get_message(VALID_MESSAGES[check_valid_msg("ATIS") as usize]));
 
     let config = clone_config();
 
@@ -41,6 +38,7 @@ fn main() {
         }
 
         println!("Message: {}", msg.replace('!', ""));
+        say("Pilot".to_string(), false, config.comma);
         say(tmp.replace("  ", " "), false, config.comma);
 
         num_msg -= 1;
