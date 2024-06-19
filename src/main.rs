@@ -20,7 +20,7 @@ fn main() {
 
         // say("Pilot".to_string(), false, config.comma).unwrap();
         println!("{}", msg.replace('!', ""));
-        say(msg_say.replace("  ", " "), false, config.comma).unwrap();
+        say(msg_say, false, config.comma).unwrap();
 
         num_msg -= 1;
     }

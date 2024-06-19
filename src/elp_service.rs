@@ -611,7 +611,7 @@ pub fn prepare_message_for_say(msg: &str) -> String {
         }
     }
 
-    tmp
+    tmp.replace("  ", " ")
 }
 
 #[cfg(test)]
