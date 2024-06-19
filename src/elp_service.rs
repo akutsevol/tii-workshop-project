@@ -331,7 +331,7 @@ pub fn get_random_msg() -> String {
             }
             any_tmp =
                 // format!("{}{} ", any_tmp, alfabet_map[_symbol.to_string().as_str()]).to_string();
-                format!("{}{} ", any_tmp, _symbol.to_string());
+                format!("{}{} ", any_tmp, _symbol);
         } else if _symbol == '=' {
             any_tmp = format!("{}{}", any_tmp, get_rw()).to_string();
         } else {
