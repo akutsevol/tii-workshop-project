@@ -553,16 +553,17 @@ fn say_service(text: String, config: &ConfigElp) -> Result<Output, std::io::Erro
             stderr: vec![],
         })
     } else if cfg!(target_os = "macos") {
-        let voices_map: HashMap<&str, &str> = get_voices().unwrap();
-
-        Command::new("say")
-            .arg(format!(
-                "--voice={}",
-                voices_map.get(config.voice.as_str()).unwrap()
-            ))
-            .arg(format!("--rate={}", config.rate))
-            .arg(text)
-            .output()
+        match get_voices() {
+            Ok(voices) => Command::new("say")
+                .arg(format!(
+                    "--voice={}",
+                    voices.get(config.voice.as_str()).unwrap()
+                ))
+                .arg(format!("--rate={}", config.rate))
+                .arg(text)
+                .output(),
+            Err(error) => Err(Error::new(std::io::ErrorKind::Other, error)),
+        }
     } else {
         Err(Error::new(
             std::io::ErrorKind::Other,
@@ -579,7 +580,7 @@ pub fn get_voices() -> Result<HashMap<&'static str, &'static str>, String> {
     if cfg!(target_os = "macos") {
         Ok(MAC_VOICES.iter().cloned().collect())
     } else {
-        Err(String::from("Unsupported platform"))
+        Err(format!("Unsupported platform {}", std::env::consts::OS))
     }
 }
 
